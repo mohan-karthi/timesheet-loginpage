@@ -1,20 +1,22 @@
+// src/services/authService.js
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/api/login/";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000/api/";
 
-export const login = async (employeeId, password) => {
-  try {
-    const response = await axios.post(API_URL, {
-      employee_id: employeeId,
-      password: password,
-    });
+/** login returns backend JSON {status, access, refresh, role} */
+export async function login(employee_id, password) {
+  const res = await axios.post(`${API_BASE}login/`, { employee_id, password });
+  return res.data;
+}
 
-    return response.data; 
-  } catch (error) {
-    throw error.response?.data?.message || "Login failed";
-  }
-};
+export function setAuthHeader(token) {
+  if (token) axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  else delete axios.defaults.headers.common["Authorization"];
+}
 
-export const setAuthHeader = (token) => {
-  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-};
+export function logout() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("role");
+  setAuthHeader(null);
+}
